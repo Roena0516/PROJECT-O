@@ -1,0 +1,22 @@
+{
+    "isFirstStart": true,
+    "speed": 7.5,
+    "effectOption": "None",
+    "playerName": "Player",
+    "displayMode": 0,
+    "displayResolution": 1,
+    "frameLimit": 4,
+    "defaultLanguage": 0,
+    "songInfoLanguage": 0,
+    "judgementLineHeight": 0,
+    "sync": 0,
+    "fastSlowExp": 3,
+    "musicVolume": 6,
+    "sfxVolume": 9,
+    "KeyBinds": [
+        "keyboard/D",
+        "keyboard/F",
+        "keyboard/J",
+        "keyboard/K"
+    ]
+}

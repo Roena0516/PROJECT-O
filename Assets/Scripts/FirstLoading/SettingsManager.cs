@@ -1,0 +1,353 @@
+using System.Collections.Generic;
+using System.IO;
+using System.Threading.Tasks;
+using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.Networking;
+
+public class GameSettings
+{
+    public bool isFirstStart = true;
+
+    public float speed = 2.0f;
+    public string effectOption = "None";
+
+    // 로컬 플레이어 이름
+    public string playerName = "Player";
+
+    // UI 설정 값들 (타이틀: 선택된 인덱스)
+    public int displayMode = 0;
+    public int displayResolution = 1;
+    public int frameLimit = 4;
+    public int defaultLanguage = 0;
+    public int songInfoLanguage = 0;
+    public int judgementLineHeight = 0;
+    public int sync = 0;
+    public int fastSlowExp = 3;
+    public int musicVolume = 6;
+    public int sfxVolume = 9;
+
+    public List<string> KeyBinds = new()
+    {
+#if UNITY_STANDALONE_OSX || UNITY_WEBGL
+        "keyboard/D",
+        "keyboard/F",
+        "keyboard/J",
+        "keyboard/K"
+#elif UNITY_STANDALONE_WIN
+        "D",
+        "F",
+        "J",
+        "K"
+#endif
+    };
+}
+
+public class SettingsManager : MonoBehaviour
+{
+    public GameSettings settings;
+
+    private static string filePath => Application.streamingAssetsPath + "/settings.json";
+
+    // private Player playerData; // API 기능 제거: 간단한 로컬 이름으로 대체
+
+    public string eventName;
+    public string songTitle;
+    public string songArtist;
+    public string fileName;
+    private SongInfoClass info;
+
+    public SongInfoClass Info
+    {
+        get => info;          // 값 가져오기
+        set => info = value;  // 값 설정하기
+    }
+
+    public MainInputAction action;
+
+    public List<InputAction> LineActions;
+
+    public bool isAutoPlay;
+
+    private bool isBlocked;
+    public bool IsBlocked
+    {
+        get => isBlocked;
+        set => isBlocked = value;
+    }
+
+    public bool isKR;
+
+    public static SettingsManager Instance { get; private set; }
+
+    private void Awake()
+    {
+        action = new MainInputAction();
+        LineActions.Add(action.Player.Line1Action);
+        LineActions.Add(action.Player.Line2Action);
+        LineActions.Add(action.Player.Line3Action);
+        LineActions.Add(action.Player.Line4Action);
+
+        settings = new();
+
+        if (Instance == null)
+        {
+            Instance = this;
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+    }
+
+    public void LoadSettings()
+    {
+        if (File.Exists(filePath))
+        {
+            string json = File.ReadAllText(filePath);
+            settings = JsonUtility.FromJson<GameSettings>(json);
+
+            for (int i = 0; i < 4; i++)
+            {
+                LineActions[i].ApplyBindingOverride(settings.KeyBinds[i]);
+            }
+
+            Debug.Log("settings.json loaded successfully");
+        }
+        else
+        {
+            Debug.LogError("settings.json not found at: " + filePath);
+            SaveSettings();
+        }
+    }
+
+    public async Task LoadSettingsInWebGL()
+    {
+        using (UnityWebRequest req = UnityWebRequest.Get(filePath))
+        {
+            var op = req.SendWebRequest();
+            while (!op.isDone)
+                await Task.Yield();
+
+            if (req.result == UnityWebRequest.Result.ConnectionError ||
+                req.result == UnityWebRequest.Result.ProtocolError)
+            {
+                Debug.LogError($"[WebGL] Failed to load settings.json: {req.error}");
+                return;
+            }
+
+            string json = req.downloadHandler.text;
+            if (!string.IsNullOrEmpty(json))
+            {
+                settings = JsonUtility.FromJson<GameSettings>(json);
+                Debug.Log("[WebGL] Settings loaded successfully.");
+            }
+            else
+            {
+                Debug.LogError("[WebGL] settings.json is empty.");
+            }
+        }
+    }
+
+    public void SaveSettings()
+    {
+        string json = JsonUtility.ToJson(settings, true);
+
+        File.WriteAllText(filePath, json);
+        Debug.Log("settings.json saved to: " + filePath);
+    }
+
+    [System.Obsolete]
+    private void OnEnable()
+    {
+        for (int i = 0; i < 4; i++)
+        {
+            LineActions[i].Enable();
+        }
+    }
+
+    [System.Obsolete]
+    private void OnDisable()
+    {
+        for (int i = 0; i < 4; i++)
+        {
+            LineActions[i].Disable();
+        }
+    }
+
+    public void SetFileName(string inputed)
+    {
+        fileName = inputed;
+    }
+
+    public void SetSongTitle(string inputed)
+    {
+        songTitle = inputed;
+    }
+
+    public void SetSongArtist(string inputed)
+    {
+        songArtist = inputed;
+    }
+
+    public void SetEventName(string inputed)
+    {
+        eventName = inputed;
+    }
+
+    public void SetSync(string inputed)
+    {
+        int.TryParse(inputed, out settings.sync);
+    }
+
+    public void SetSpeed(string inputed)
+    {
+        float.TryParse(inputed, out settings.speed);
+    }
+
+    public void SetKeyBinds(List<string> keys)
+    {
+        settings.KeyBinds = keys;
+    }
+
+    public void SetFirstStart(bool setted)
+    {
+        settings.isFirstStart = setted;
+    }
+
+    // 오프라인 모드: 로컬 플레이어 이름 관리
+    public void SetLocalPlayerName(string name)
+    {
+        settings.playerName = name;
+        SaveSettings();
+    }
+
+    public string GetLocalPlayerName()
+    {
+        return settings.playerName;
+    }
+
+    // API 기능 제거: 레거시 호환을 위한 더미 함수들
+    public void SetPlayerData(Player setted)
+    {
+        // 오프라인 모드에서는 사용하지 않음
+        Debug.LogWarning("[SettingsManager] SetPlayerData is deprecated in offline mode");
+    }
+
+    public Player GetPlayerData()
+    {
+        // 오프라인 모드: 더미 Player 객체 반환 (레거시 호환)
+        return new Player
+        {
+            id = "local",
+            playerName = settings.playerName,
+            accessToken = "",
+            refreshToken = "",
+            rating = 0,
+            ranking = 0
+        };
+    }
+
+    public void UpdateSettingValue(string settingTitle, int newIndex)
+    {
+        UpdateSettingValueWithoutSave(settingTitle, newIndex);
+
+        // 자동 저장
+        SaveSettings();
+    }
+
+    public void UpdateSettingValueWithoutSave(string settingTitle, int newIndex)
+    {
+        // Localization된 타이틀을 키로 사용하기 때문에 매핑 필요
+        LocalizationManager locManager = LocalizationManager.Instance;
+
+        if (settingTitle == locManager.GetText("display_mode"))
+        {
+            settings.displayMode = newIndex;
+        }
+        else if (settingTitle == locManager.GetText("display_resolution"))
+        {
+            settings.displayResolution = newIndex;
+        }
+        else if (settingTitle == locManager.GetText("frame_limit"))
+        {
+            settings.frameLimit = newIndex;
+        }
+        else if (settingTitle == locManager.GetText("default_language"))
+        {
+            settings.defaultLanguage = newIndex;
+        }
+        else if (settingTitle == locManager.GetText("song_info_language"))
+        {
+            settings.songInfoLanguage = newIndex;
+        }
+        else if (settingTitle == locManager.GetText("judgement_line_height"))
+        {
+            settings.judgementLineHeight = newIndex;
+        }
+        else if (settingTitle == locManager.GetText("song_output_delay"))
+        {
+            settings.sync = newIndex;
+        }
+        else if (settingTitle == locManager.GetText("fast_slow_exp"))
+        {
+            settings.fastSlowExp = newIndex;
+        }
+        else if (settingTitle == locManager.GetText("music_volume"))
+        {
+            settings.musicVolume = newIndex;
+        }
+        else if (settingTitle == locManager.GetText("sfx_volume"))
+        {
+            settings.sfxVolume = newIndex;
+        }
+    }
+
+    public int GetSettingValue(string settingTitle)
+    {
+        LocalizationManager locManager = LocalizationManager.Instance;
+
+        if (settingTitle == locManager.GetText("display_mode"))
+        {
+            return settings.displayMode;
+        }
+        else if (settingTitle == locManager.GetText("display_resolution"))
+        {
+            return settings.displayResolution;
+        }
+        else if (settingTitle == locManager.GetText("frame_limit"))
+        {
+            return settings.frameLimit;
+        }
+        else if (settingTitle == locManager.GetText("default_language"))
+        {
+            return settings.defaultLanguage;
+        }
+        else if (settingTitle == locManager.GetText("song_info_language"))
+        {
+            return settings.songInfoLanguage;
+        }
+        else if (settingTitle == locManager.GetText("judgement_line_height"))
+        {
+            return settings.judgementLineHeight;
+        }
+        else if (settingTitle == locManager.GetText("song_output_delay"))
+        {
+            return settings.sync;
+        }
+        else if (settingTitle == locManager.GetText("fast_slow_exp"))
+        {
+            return settings.fastSlowExp;
+        }
+        else if (settingTitle == locManager.GetText("music_volume"))
+        {
+            return settings.musicVolume;
+        }
+        else if (settingTitle == locManager.GetText("sfx_volume"))
+        {
+            return settings.sfxVolume;
+        }
+
+        return 0;
+    }
+}
