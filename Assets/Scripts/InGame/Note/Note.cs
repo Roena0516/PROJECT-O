@@ -2,6 +2,7 @@ using FMOD.Studio;
 using FMODUnity;
 using System;
 using System.Collections;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class Note : MonoBehaviour
@@ -22,8 +23,8 @@ public class Note : MonoBehaviour
 
     public NoteClass noteClass;
 
-    private const float startY = 87f;
-    private const float endY = -96f;
+    private float startY = 87f;
+    private float endY = -96f;
 
     private float YPosition = 0f;
 
@@ -51,7 +52,17 @@ public class Note : MonoBehaviour
             gameObject.transform.localScale = new Vector3(7f * noteClass.width, 1f, 1f);
         }
 
-        moveNoteRoutine = StartCoroutine(MoveNote());
+        float oneBeatDuration = 60f / BPM * 1000f;
+
+
+        if (noteClass.type == "null")
+        {
+            moveNoteRoutine = StartCoroutine(MoveLongNote());
+        }
+        else
+        {
+            moveNoteRoutine = StartCoroutine(MoveNote());
+        }
     }
 
     public void SetNote()
@@ -75,20 +86,61 @@ public class Note : MonoBehaviour
             float progress = (float)(elapsedTime * speed / (startY - endY));
             progress = Mathf.Clamp01(progress);  // 0 ~ 1 사이로 제한
             float currentY = Mathf.Lerp(startY, endY, progress);
-            if (noteClass.type == "null")
-            {
-                float longNoteLength = gameObject.transform.localScale.z;
-                currentY += longNoteLength / 2f;
-            }
             transform.position = new Vector3(transform.position.x, YPosition, currentY);
 
             yield return null;
         }
     }
 
+    public IEnumerator MoveLongNote()
+    {
+        float originScaleZ = gameObject.transform.localScale.z;
+        double longNoteEndTimeMs = ms + (60000f / noteGenerator.BPM * noteClass.length);
+        double remainingDistance;
+
+        while (longNoteEndTimeMs - (line.currentTime * 1000f) >= -200f)
+        {
+            double currentTimeMs = line.currentTime * 1000f;
+            double duration = longNoteEndTimeMs - currentTimeMs;
+            if (line.isHolding[(int)noteClass.position - 1])
+            {
+                endY = 10f;
+
+                remainingDistance = speed * (duration / 1000f);
+            }
+            else
+            {
+                endY = -96f;
+                remainingDistance = speed * (duration / 1000f) + 106f;
+            }
+
+
+            dropStartTime = (ms - noteGenerator.fallTime) / 1000f;
+            double elapsedTime = line.currentTime - dropStartTime;
+            float progress = (float)(elapsedTime * speed / (startY - endY));
+            progress = Mathf.Clamp01(progress);  // 0 ~ 1 사이로 제한
+            float currentY = Mathf.Lerp(startY, endY, progress);
+
+            gameObject.transform.localScale = new Vector3(gameObject.transform.localScale.x, gameObject.transform.localScale.y, (float)remainingDistance);
+
+            float longNoteLength = gameObject.transform.localScale.z;
+            currentY += longNoteLength / 2f;
+            transform.position = new Vector3(transform.position.x, YPosition, currentY);
+
+            yield return null;
+        }
+
+        Destroy(gameObject);
+        yield break;
+    }
+
     private void Misser()
     {
-        if ((line.currentTime * 1000f) - ms >= 200f)
+        // 롱노트와 longNote(null)는 JudgementManager에서 처리하므로 여기서 제외
+        if (noteClass.type == "long" || noteClass.type == "null")
+            return;
+
+        if (!noteClass.isInputed && (line.currentTime * 1000f) - ms >= 200f)
         {
             judgement.PerformAction(noteClass, "Miss", ms);
             judgement.ClearCombo();

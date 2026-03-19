@@ -18,6 +18,7 @@ public class JudgementManager : MonoBehaviour
 
     public NoteGenerator noteGenerator;
     public GameManager gameManager;
+    public LineInputChecker lineInputChecker;
     // public SyncRoomManager syncRoomManager; // 클래스가 존재하지 않아 제거됨
     private SettingsManager settings;
     public ParticleManager particle;
@@ -133,6 +134,67 @@ public class JudgementManager : MonoBehaviour
                 PerformAction(note, "Bad", currentTimeMs);
                 ClearCombo();
                 break;
+            }
+
+            // 롱노트 시작 판정 (일반 노트와 동일)
+            if (note.type == "long" && raneNumber + 1 == note.position && !note.longNoteStarted)
+            {
+                double Ms = note.ms - currentTimeMs;
+
+                // pressedTime 초기화 (총 시간으로 시작)
+                float totalTime = 60000f / noteGenerator.BPM * note.length;
+                note.pressedTime = totalTime;
+
+                if (timeDifference <= perfectp)
+                {
+                    note.startJudgement = "PerfectP";
+                    note.longNoteStarted = true;
+                    note.isLongNotePressing = true;
+                    Destroy(note.noteObject); // 첫 노트 제거
+                    StartCoroutine(UIManager.JudgementTextShower("PerfectP", Ms, note.position));
+                    AddCombo(1);
+                    break;
+                }
+                else if (timeDifference <= perfect)
+                {
+                    note.startJudgement = "Perfect";
+                    note.longNoteStarted = true;
+                    note.isLongNotePressing = true;
+                    Destroy(note.noteObject); // 첫 노트 제거
+                    StartCoroutine(UIManager.JudgementTextShower("Perfect", Ms, note.position));
+                    AddCombo(1);
+                    break;
+                }
+                else if (timeDifference <= great)
+                {
+                    note.startJudgement = "Great";
+                    note.longNoteStarted = true;
+                    note.isLongNotePressing = true;
+                    Destroy(note.noteObject); // 첫 노트 제거
+                    StartCoroutine(UIManager.JudgementTextShower("Great", Ms, note.position));
+                    AddCombo(1);
+                    break;
+                }
+                else if (timeDifference <= good)
+                {
+                    note.startJudgement = "Good";
+                    note.longNoteStarted = true;
+                    note.isLongNotePressing = true;
+                    Destroy(note.noteObject); // 첫 노트 제거
+                    StartCoroutine(UIManager.JudgementTextShower("Good", Ms, note.position));
+                    AddCombo(1);
+                    break;
+                }
+                else if (timeDifference <= bad)
+                {
+                    note.startJudgement = "Bad";
+                    note.longNoteStarted = true;
+                    note.isLongNotePressing = true;
+                    Destroy(note.noteObject); // 첫 노트 제거
+                    StartCoroutine(UIManager.JudgementTextShower("Bad", Ms, note.position));
+                    ClearCombo();
+                    break;
+                }
             }
         }
     }
@@ -271,6 +333,141 @@ public class JudgementManager : MonoBehaviour
     {
         rate -= typeRate * ratio;
         UIManager.ChangeRate(rate);
+    }
+
+    private void Update()
+    {
+        if (noteGenerator == null || noteGenerator.notes == null || lineInputChecker == null)
+            return;
+
+        double currentTimeMs = lineInputChecker.currentTime * 1000f;
+
+        foreach (NoteClass note in noteGenerator.notes)
+        {
+            if (note.type == "long" && note.longNoteStarted && !note.isInputed)
+            {
+                float longNoteEndTimeMs = note.ms + (60000f / noteGenerator.BPM * note.length);
+
+                // 롱노트 진행 중
+                if (currentTimeMs >= note.ms && currentTimeMs <= longNoteEndTimeMs)
+                {
+                    int laneIndex = (int)note.position - 1;
+
+                    // 키가 안눌려있는지 확인
+                    if (!lineInputChecker.isHolding[laneIndex])
+                    {
+                        note.isLongNotePressing = false;
+                        note.pressedTime -= Time.deltaTime * 1000f; // 누적 시간 감소 (ms)
+                    }
+                    else
+                    {
+                        note.isLongNotePressing = true;
+                    }
+
+                    // tick마다 현재 판정 표시
+                    if (note.tick > 0)
+                    {
+                        float oneBeatDuration = 60000f / noteGenerator.BPM; // ms
+                        float currentBeat = note.beat + ((float)(currentTimeMs - note.ms) / oneBeatDuration);
+
+                        if (currentBeat - note.lastTickBeat >= note.tick)
+                        {
+                            ShowLongNoteTickJudgement(note);
+                            note.lastTickBeat = currentBeat;
+                        }
+                    }
+                }
+                // 롱노트 종료
+                else if (currentTimeMs > longNoteEndTimeMs)
+                {
+                    FinalLongNoteJudgement(note, currentTimeMs);
+                    note.isInputed = true;
+                }
+            }
+        }
+    }
+
+    private void ShowLongNoteTickJudgement(NoteClass note)
+    {
+        float totalTime = 60000f / noteGenerator.BPM * note.length;
+        float ratio = note.pressedTime / totalTime;
+
+        string currentJudgement = GetLongNoteJudgement(ratio, note.startJudgement);
+
+        // 점수 반영 없이 텍스트만 표시
+        StartCoroutine(UIManager.JudgementTextShower(currentJudgement, 0, note.position));
+    }
+
+    private void FinalLongNoteJudgement(NoteClass note, double currentTimeMs)
+    {
+        float totalTime = 60000f / noteGenerator.BPM * note.length;
+        float ratio = note.pressedTime / totalTime;
+
+        string finalJudgement = GetLongNoteJudgement(ratio, note.startJudgement);
+
+        // longNote 제거 (기다란 노트)
+        if (note.longObject != null)
+        {
+            Destroy(note.longObject);
+        }
+
+        // 최종 판정: 점수와 카운트 반영
+        PerformAction(note, finalJudgement, currentTimeMs);
+
+        // 콤보 처리
+        if (finalJudgement == "PerfectP" || finalJudgement == "Perfect" || finalJudgement == "Great")
+        {
+            // 콤보는 시작 판정에서 이미 추가했으므로 유지
+        }
+        else
+        {
+            ClearCombo();
+        }
+    }
+
+    private string GetLongNoteJudgement(float ratio, string startJudgement)
+    {
+        // 비율에 따른 판정
+        string judgementByRatio;
+
+        Debug.Log($"Long Note Ratio: {ratio}");
+        if (ratio >= 1f)
+        {
+            judgementByRatio = "PerfectP";
+        }
+        else if (ratio >= 0.8f)
+        {
+            judgementByRatio = "Perfect";
+        }
+        else if (ratio >= 0.5f)
+        {
+            judgementByRatio = "Great";
+        }
+        else
+        {
+            judgementByRatio = "Good";
+        }
+
+        // 시작 판정을 넘을 수 없음
+        return GetWorseJudgement(startJudgement, judgementByRatio);
+    }
+
+    private string GetWorseJudgement(string judgement1, string judgement2)
+    {
+        // 판정 우선순위: PerfectP > Perfect > Great > Good > Bad
+        Dictionary<string, int> priority = new Dictionary<string, int>
+        {
+            { "PerfectP", 5 },
+            { "Perfect", 4 },
+            { "Great", 3 },
+            { "Good", 2 },
+            { "Bad", 1 }
+        };
+
+        int p1 = priority.ContainsKey(judgement1) ? priority[judgement1] : 0;
+        int p2 = priority.ContainsKey(judgement2) ? priority[judgement2] : 0;
+
+        return p1 < p2 ? judgement1 : judgement2; // 더 낮은(나쁜) 판정 반환
     }
 
 }

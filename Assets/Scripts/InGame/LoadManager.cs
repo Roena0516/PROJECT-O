@@ -42,6 +42,13 @@ public class NoteClass
 
     public GameObject noteObject;
     public GameObject longObject;
+
+    // 롱노트 전용 변수
+    public float pressedTime = 0f;        // 누른 누적 시간 (ms)
+    public bool isLongNotePressing = false; // 현재 누르고 있는지
+    public float lastTickBeat = 0f;       // 마지막으로 표시한 tick 비트
+    public string startJudgement = "";    // 시작 판정 (최대 판정)
+    public bool longNoteStarted = false;  // 롱노트 시작 판정을 받았는지
 }
 
 public class LoadManager : MonoBehaviour

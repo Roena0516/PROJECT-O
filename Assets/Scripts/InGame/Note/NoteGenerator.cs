@@ -231,10 +231,9 @@ public class NoteGenerator : MonoBehaviour
 
             longNoteClass.type = "null";
             longNoteClass.noteObject = longNote;
-            longNoteClass.ms = noteClass.ms;
             longNoteClass.position = noteClass.position;
             longNoteClass.beat = noteClass.beat;
-
+            longNoteClass.length = noteClass.length;
 
             StartCoroutine(NoteSetter(longNoteClass, longNote, beatDuration));
         }
