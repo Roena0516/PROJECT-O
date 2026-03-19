@@ -31,6 +31,7 @@ public class NoteClass
     public float ms;
     public float width = 1f;
     public float length = 4f;
+    public float tick;
     public float position;
     public string type;
 

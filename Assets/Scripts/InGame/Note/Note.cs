@@ -8,6 +8,8 @@ public class Note : MonoBehaviour
 {
     private float speed;
 
+    public float BPM;
+
     public bool isSet;
     public double ms;
 
@@ -42,9 +44,12 @@ public class Note : MonoBehaviour
 
         speed = noteGenerator.speed;
         dropStartTime = (ms - noteGenerator.fallTime) / 1000f;
-        YPosition = noteClass.type == "normal" ? 0.001f : 2f;
+        YPosition = noteClass.type == "hold" ? 2f : 0.001f;
 
-        gameObject.transform.localScale = new Vector3(7f * noteClass.width, 1f, 1f);
+        if (noteClass.type == "hold")
+        {
+            gameObject.transform.localScale = new Vector3(7f * noteClass.width, 1f, 1f);
+        }
 
         moveNoteRoutine = StartCoroutine(MoveNote());
     }
@@ -70,6 +75,11 @@ public class Note : MonoBehaviour
             float progress = (float)(elapsedTime * speed / (startY - endY));
             progress = Mathf.Clamp01(progress);  // 0 ~ 1 사이로 제한
             float currentY = Mathf.Lerp(startY, endY, progress);
+            if (noteClass.type == "null")
+            {
+                float longNoteLength = gameObject.transform.localScale.z;
+                currentY += longNoteLength / 2f;
+            }
             transform.position = new Vector3(transform.position.x, YPosition, currentY);
 
             yield return null;

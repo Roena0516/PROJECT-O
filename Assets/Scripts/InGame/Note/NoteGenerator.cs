@@ -215,23 +215,11 @@ public class NoteGenerator : MonoBehaviour
         {
             note = Instantiate(notePrefab, ranePosition, R, notesFolder.transform);
         }
-        else if (type == "hold")
-        {
-            float zer0Point = -10.5f;
-            float gap = 7f;
-            ranePosition = new Vector3(zer0Point + gap * (position - 1), spawnPosition1.y, 0);
-
-            note = Instantiate(bellPrefab, ranePosition, R, bellsFolder.transform);
-        }
         else if (type == "long")
         {
             note = Instantiate(notePrefab, ranePosition, R, notesFolder.transform);
 
-            float judgeLineDistance = distance;
-            float arrivalTime = judgeLineDistance / speed;
-            float noteSpeed = judgeLineDistance / arrivalTime * speed;
-
-            float oneBeatDistance = noteSpeed * oneBeatDuration / 1000f;
+            float oneBeatDistance = speed * (oneBeatDuration / 1000f);
             float longNoteLength = oneBeatDistance * noteClass.length;
 
             Vector3 longNotePosition = ranePosition;
@@ -241,10 +229,22 @@ public class NoteGenerator : MonoBehaviour
 
             NoteClass longNoteClass = longNote.GetComponent<Note>().noteClass;
 
-            longNoteClass = noteClass;
             longNoteClass.type = "null";
+            longNoteClass.noteObject = longNote;
+            longNoteClass.ms = noteClass.ms;
+            longNoteClass.position = noteClass.position;
+            longNoteClass.beat = noteClass.beat;
+
 
             StartCoroutine(NoteSetter(longNoteClass, longNote, beatDuration));
+        }
+        else if (type == "hold")
+        {
+            float zer0Point = -10.5f;
+            float gap = 7f;
+            ranePosition = new Vector3(zer0Point + gap * (position - 1), spawnPosition1.y, 0);
+
+            note = Instantiate(bellPrefab, ranePosition, R, bellsFolder.transform);
         }
 
         if (noteClass.isEndNote == true)
@@ -276,6 +276,7 @@ public class NoteGenerator : MonoBehaviour
 
         noteScript.noteClass = noteClass;
         noteScript.ms = ms;
+        noteScript.BPM = BPM;
 
         yield break;
     }
