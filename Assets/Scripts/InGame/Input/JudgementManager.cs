@@ -100,11 +100,11 @@ public class JudgementManager : MonoBehaviour
 
             float timeDifference = Mathf.Abs((float)(note.ms - currentTimeMs));
 
-            if (timeDifference <= bad && note.type == "hold" && raneNumber + 1 == note.position && !note.isInputed)
-            {
-                SetHoldInputed(note);
-                break;
-            }
+            // if (timeDifference <= bad && note.type == "hold" && raneNumber + 1 == note.position && !note.isInputed)
+            // {
+            //     SetHoldInputed(note);
+            //     break;
+            // }
             if (timeDifference <= perfectp && note.type == "normal" && raneNumber + 1 == note.position && !note.isInputed)
             {
                 PerformAction(note, "PerfectP", currentTimeMs);
@@ -215,11 +215,11 @@ public class JudgementManager : MonoBehaviour
             float timeDifference = Mathf.Abs((float)(note.ms - currentTimeMs));
             double notAbsDiff = note.ms - currentTimeMs;
 
-            if ((note.ms - (currentTimeMs) <= 50 && note.ms - (currentTimeMs) > 0) && note.type == "hold" && raneNumber + 1 == note.position && !note.isInputed)
-            {
-                note.isInputed = true;
-                break;
-            }
+            // if ((note.ms - (currentTimeMs) <= 50 && note.ms - (currentTimeMs) > 0) && note.type == "hold" && raneNumber + 1 == note.position && !note.isInputed)
+            // {
+            //     note.isInputed = true;
+            //     break;
+            // }
 
             if (notAbsDiff >= -80 && notAbsDiff < 60 && note.type == "up" && raneNumber + 1 == note.position && !note.isInputed)
             {
