@@ -86,15 +86,21 @@ public class LoadManager : MonoBehaviour
         if (!SceneManager.GetSceneByName("LevelEditor").isLoaded)
         {
 #if UNITY_STANDALONE || UNITY_EDITOR
-            // 암호화 제거: .json 파일 직접 읽기
-            // LoadFromJson(Path.Combine(settings.fileName));
-            LoadFromJson(Path.Combine(Directory.GetFiles(Application.streamingAssetsPath, "Charts/god_ish/NIGHTMARE.json")[0]));
+            LoadFromJson(settings.fileName);
 #endif
         }
         else
         {
-            info = levelEditer.saveManager.info;
-            notes = levelEditer.saveManager.notes;
+            // 깊은 복사: JsonUtility를 사용하여 새로운 객체 생성
+            info = JsonUtility.FromJson<SongInfoClass>(JsonUtility.ToJson(levelEditer.saveManager.info));
+
+            // notes도 깊은 복사
+            notes = new List<NoteClass>();
+            foreach (var note in levelEditer.saveManager.notes)
+            {
+                NoteClass copiedNote = JsonUtility.FromJson<NoteClass>(JsonUtility.ToJson(note));
+                notes.Add(copiedNote);
+            }
 
             settings.eventName = info.eventName;
 

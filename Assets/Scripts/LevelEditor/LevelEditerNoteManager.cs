@@ -26,6 +26,16 @@ public class LevelEditerNoteManager : MonoBehaviour
     private void SetIsInputedToFalse()
     {
         isInputed = false;
+
+        // 롱노트의 추가 플래그도 초기화
+        if (noteClass.type == "long")
+        {
+            noteClass.longNoteStarted = false;
+            noteClass.isLongNotePressing = false;
+            noteClass.pressedTime = 0f;
+            noteClass.lastTickBeat = 0f;
+            noteClass.startJudgement = "";
+        }
     }
 
     // 노트 클릭 시 선택

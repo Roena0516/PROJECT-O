@@ -848,6 +848,32 @@ public class LevelEditer : MonoBehaviour
         }
     }
 
+    // 롱노트 tick 설정
+    public void SetLongNoteTick(string inputed)
+    {
+        if (selectedNote == null)
+        {
+            Debug.LogWarning("No note selected!");
+            return;
+        }
+
+        if (selectedNote.noteClass.type.ToLower() != "long")
+        {
+            Debug.LogWarning("Selected note is not a long note!");
+            return;
+        }
+
+        if (float.TryParse(inputed, out float tick))
+        {
+            selectedNote.noteClass.tick = tick;
+            Debug.Log($"Long note tick updated: tick = {tick}");
+        }
+        else
+        {
+            Debug.LogWarning($"Invalid tick value: {inputed}");
+        }
+    }
+
     // 롱노트의 시각적 길이 업데이트
     private void UpdateLongNoteVisualLength(LevelEditerNoteManager note, float length)
     {
