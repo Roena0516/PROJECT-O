@@ -1,6 +1,19 @@
 {
   "songs": [
     {
+      "id": 0,
+      "title": "신 같네",
+      "jpTitle": "神っぽいな",
+      "artist": "피노키오피",
+      "jpArtist": "ピノキオピー",
+      "category": "vocaloid",
+      "bpm": 142.0,
+      "eventName": "godish",
+      "fileLocation": "god_ish",
+      "level": 7.0,
+      "difficulty": "ADVERSITY"
+    },
+    {
       "id": 1,
       "title": "신 같네",
       "jpTitle": "神っぽいな",

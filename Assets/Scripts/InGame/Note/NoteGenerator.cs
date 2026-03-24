@@ -223,11 +223,13 @@ public class NoteGenerator : MonoBehaviour
             float longNoteLength = oneBeatDistance * noteClass.length;
 
             Vector3 longNotePosition = ranePosition;
-            longNotePosition.z += longNoteLength / 2f;
             longNote = Instantiate(longPrefab, longNotePosition, R, notesFolder.transform);
-            longNote.transform.localScale = new Vector3(6f, 0f, longNoteLength);
 
             NoteClass longNoteClass = longNote.GetComponent<Note>().noteClass;
+
+            longNote.transform.localScale = new Vector3(6f, 0f, longNoteLength);
+            longNotePosition.z += longNoteLength / 2f;
+            longNote.transform.position = longNotePosition;
 
             longNoteClass.type = "null";
             longNoteClass.noteObject = longNote;
@@ -237,8 +239,9 @@ public class NoteGenerator : MonoBehaviour
 
             StartCoroutine(NoteSetter(longNoteClass, longNote, beatDuration));
         }
-        else if (type == "hold")
+        else if (type == "hold" || type == "bell")
         {
+            noteClass.type = "hold";
             float zer0Point = -10.5f;
             float gap = 7f;
             ranePosition = new Vector3(zer0Point + gap * (position - 1), spawnPosition1.y, 0);

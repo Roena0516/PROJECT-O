@@ -96,23 +96,22 @@ public class Note : MonoBehaviour
     {
         float originScaleZ = gameObject.transform.localScale.z;
         double longNoteEndTimeMs = ms + (60000f / noteGenerator.BPM * noteClass.length);
-        double remainingDistance;
+        double remainingDistance = originScaleZ;
+
+        endY = 10f;
 
         while (longNoteEndTimeMs - (line.currentTime * 1000f) >= -200f)
         {
             double currentTimeMs = line.currentTime * 1000f;
             double duration = longNoteEndTimeMs - currentTimeMs;
-            if (line.isHolding[(int)noteClass.position - 1])
-            {
-                endY = 10f;
+            remainingDistance = speed * (duration / 1000f);
 
-                remainingDistance = speed * (duration / 1000f);
-            }
-            else
+            if (line.currentTime * 1000f <= ms)
             {
-                endY = -96f;
-                remainingDistance = speed * (duration / 1000f) + 106f;
+                remainingDistance = originScaleZ;
             }
+
+            gameObject.transform.localScale = new Vector3(gameObject.transform.localScale.x, gameObject.transform.localScale.y, (float)remainingDistance);
 
 
             dropStartTime = (ms - noteGenerator.fallTime) / 1000f;
@@ -121,10 +120,7 @@ public class Note : MonoBehaviour
             progress = Mathf.Clamp01(progress);  // 0 ~ 1 사이로 제한
             float currentY = Mathf.Lerp(startY, endY, progress);
 
-            gameObject.transform.localScale = new Vector3(gameObject.transform.localScale.x, gameObject.transform.localScale.y, (float)remainingDistance);
-
-            float longNoteLength = gameObject.transform.localScale.z;
-            currentY += longNoteLength / 2f;
+            currentY += (float)remainingDistance / 2f;
             transform.position = new Vector3(transform.position.x, YPosition, currentY);
 
             yield return null;

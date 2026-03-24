@@ -24,8 +24,8 @@ public class LevelEditer : MonoBehaviour
     public SaveManager saveManager;
 
     public GameObject normalPrefab;
-    public GameObject holdPrefab;
-    public GameObject upPrefab;
+    public GameObject bellPrefab;
+    public GameObject longPrefab;
 
     public GameObject notesFolder;
     public GameObject gridFolder;
@@ -205,6 +205,25 @@ public class LevelEditer : MonoBehaviour
             return;
         }
 
+        // 이미 같은 위치에 노트가 있는지 확인
+        NoteClass existingNote = saveManager.notes.Find(note => note.beat == realBeat && note.position == position);
+        if (existingNote != null)
+        {
+            // 해당 노트를 찾아서 선택
+            foreach (Transform child in notesFolder.transform)
+            {
+                LevelEditerNoteManager noteManager = child.GetComponent<LevelEditerNoteManager>();
+                if (noteManager != null && noteManager.noteClass.beat == realBeat && noteManager.noteClass.position == position)
+                {
+                    SelectNote(noteManager);
+                    Debug.Log($"Selected existing note at Position {position}, Beat {realBeat}");
+                    return;
+                }
+            }
+            Debug.LogWarning($"Note exists in data but GameObject not found at Position {position}, Beat {realBeat}");
+            return;
+        }
+
         float positionX = 0f;
         if (position == 1)
         {
@@ -230,8 +249,8 @@ public class LevelEditer : MonoBehaviour
         GameObject prefab = noteType switch
         {
             "Normal" => normalPrefab,
-            "Hold" => holdPrefab,
-            "Up" => upPrefab,
+            "Bell" => bellPrefab,
+            "Long" => longPrefab,
             _ => null
         };
 
@@ -241,6 +260,20 @@ public class LevelEditer : MonoBehaviour
         levelEditerNoteManager.noteClass.position = position;
         levelEditerNoteManager.noteClass.beat = realBeat;
         levelEditerNoteManager.noteClass.type = noteType.ToLower();
+
+        // 롱노트는 length를 4로 초기화
+        if (noteType.ToLower() == "long")
+        {
+            levelEditerNoteManager.noteClass.length = 4f;
+            UpdateLongNoteVisualLength(levelEditerNoteManager, 4f);
+        }
+
+        // Bell 노트는 width를 1.0으로 초기화
+        if (noteType.ToLower() == "bell")
+        {
+            levelEditerNoteManager.noteClass.width = 1f;
+        }
+
         saveManager.notes.Add(levelEditerNoteManager.noteClass);
     }
 
@@ -532,12 +565,12 @@ public class LevelEditer : MonoBehaviour
 
     public void SaveLevel()
     {
-        saveManager.SaveToJson(Path.Combine(Application.streamingAssetsPath, $"{artist}-{title}.roena"), BPM, artist, title, eventName, level, difficulty);
+        saveManager.SaveToJson(Path.Combine(Application.streamingAssetsPath, $"{artist}-{title}.json"), BPM, artist, title, eventName, level, difficulty);
     }
 
     public void LoadLevel()
     {
-        LoadFromJson(Path.Combine(Application.streamingAssetsPath, $"{fileName}.roena"));
+        LoadFromJson(Path.Combine(Application.streamingAssetsPath, $"{fileName}.json"));
     }
 
     private void LoadFromJson(string filePath)
@@ -546,9 +579,7 @@ public class LevelEditer : MonoBehaviour
         {
             string json = File.ReadAllText(filePath);
 
-            string decrypted = EncryptionHelper.Decrypt(json);
-
-            NotesContainer container = JsonUtility.FromJson<NotesContainer>(decrypted);
+            NotesContainer container = JsonUtility.FromJson<NotesContainer>(json);
             BPM = container.info.bpm;
             artist = container.info.artist;
             title = container.info.title;
@@ -588,21 +619,33 @@ public class LevelEditer : MonoBehaviour
             canvas.transform.localScale = Vector3.one;
 
             float positionX = 0f;
-            if (note.position == 1)
+
+            // Bell/Hold 노트는 float position을 사용하여 연속적인 위치 계산
+            if (note.type.ToLower() == "hold" || note.type.ToLower() == "bell")
             {
-                positionX = -158f;
+                // position 1 = -158f, position 4 = 158f
+                // 선형 보간: positionX = -158 + (position - 1) * (316 / 3)
+                positionX = -158f + (note.position - 1f) * (316f / 3f);
             }
-            if (note.position == 2)
+            else
             {
-                positionX = 158f / 3f * -1f;
-            }
-            if (note.position == 3f)
-            {
-                positionX = 158f / 3f;
-            }
-            if (note.position == 4f)
-            {
-                positionX = 158f;
+                // Normal, Long 노트는 정수 position 사용
+                if (note.position == 1)
+                {
+                    positionX = -158f;
+                }
+                else if (note.position == 2)
+                {
+                    positionX = 158f / 3f * -1f;
+                }
+                else if (note.position == 3f)
+                {
+                    positionX = 158f / 3f;
+                }
+                else if (note.position == 4f)
+                {
+                    positionX = 158f;
+                }
             }
 
             float positionY = -211f + (320f * note.beat);
@@ -611,8 +654,9 @@ public class LevelEditer : MonoBehaviour
             GameObject prefab = note.type switch
             {
                 "normal" => normalPrefab,
-                "hold" => holdPrefab,
-                "up" => upPrefab,
+                "hold" => bellPrefab,
+                "bell" => bellPrefab,
+                "long" => longPrefab,
                 _ => null
             };
 
@@ -622,6 +666,20 @@ public class LevelEditer : MonoBehaviour
             levelEditerNoteManager.noteClass.position = note.position;
             levelEditerNoteManager.noteClass.beat = note.beat;
             levelEditerNoteManager.noteClass.type = note.type;
+
+            // Long 노트의 length 적용
+            if (note.type.ToLower() == "long")
+            {
+                levelEditerNoteManager.noteClass.length = note.length;
+                UpdateLongNoteVisualLength(levelEditerNoteManager, note.length);
+            }
+
+            // Bell/Hold 노트의 width 적용
+            if (note.type.ToLower() == "hold" || note.type.ToLower() == "bell")
+            {
+                levelEditerNoteManager.noteClass.width = note.width;
+                UpdateBellNoteVisualWidth(levelEditerNoteManager, note.width);
+            }
         }
     }
 
@@ -721,7 +779,7 @@ public class LevelEditer : MonoBehaviour
     public void ChangeToTestScene()
     {
         canvas.SetActive(false);
-        
+
         SceneManager.LoadSceneAsync("InGame", LoadSceneMode.Additive);
         Scene testScene = SceneManager.GetSceneByName("InGame");
         if (testScene.IsValid() && testScene.isLoaded)
@@ -737,6 +795,188 @@ public class LevelEditer : MonoBehaviour
         if (settingsPanel.activeSelf)
         {
 
+        }
+    }
+
+    // ========== 노트 세부 설정 기능 ==========
+
+    // 현재 선택된 노트 (UI에서 클릭하여 선택)
+    private LevelEditerNoteManager selectedNote;
+
+    public void SelectNote(LevelEditerNoteManager note)
+    {
+        selectedNote = note;
+        Debug.Log($"Note selected: Type={note.noteClass.type}, Beat={note.noteClass.beat}, Position={note.noteClass.position}");
+    }
+
+    // 롱노트 length 설정
+    public void SetLongNoteLength(string inputed)
+    {
+        if (selectedNote == null)
+        {
+            Debug.LogWarning("No note selected!");
+            return;
+        }
+
+        if (selectedNote.noteClass.type.ToLower() != "long")
+        {
+            Debug.LogWarning("Selected note is not a long note!");
+            return;
+        }
+
+        if (float.TryParse(inputed, out float length))
+        {
+            selectedNote.noteClass.length = length;
+            Debug.Log($"Long note length set to {length}");
+
+            // SaveManager의 notes 리스트에서 해당 노트를 찾아 업데이트
+            NoteClass note = saveManager.notes.Find(n =>
+                n.beat == selectedNote.noteClass.beat &&
+                n.position == selectedNote.noteClass.position &&
+                n.type == selectedNote.noteClass.type);
+            if (note != null)
+            {
+                note.length = length;
+            }
+
+            // 시각적 길이 업데이트 (RectTransform의 height 조절)
+            UpdateLongNoteVisualLength(selectedNote, length);
+        }
+        else
+        {
+            Debug.LogWarning($"Invalid length value: {inputed}");
+        }
+    }
+
+    // 롱노트의 시각적 길이 업데이트
+    private void UpdateLongNoteVisualLength(LevelEditerNoteManager note, float length)
+    {
+        RectTransform rectTransform = note.GetComponent<RectTransform>();
+        if (rectTransform != null)
+        {
+            // 기본 height = 15, length에 비례하여 height 증가
+            // length는 beat 단위이므로, beat당 픽셀 수를 곱해야 함
+            // 1 beat = 320f (positionY 계산에서 사용한 값)
+            float baseHeight = 15f;
+            float heightPerBeat = 320f;
+            float newHeight = baseHeight + (length * heightPerBeat);
+
+            rectTransform.sizeDelta = new Vector2(rectTransform.sizeDelta.x, newHeight);
+            Debug.Log($"Long note visual length updated: height = {newHeight}");
+        }
+    }
+
+    // Bell 노트 width 설정
+    public void SetBellNoteWidth(string inputed)
+    {
+        if (selectedNote == null)
+        {
+            Debug.LogWarning("No note selected!");
+            return;
+        }
+
+        if (selectedNote.noteClass.type.ToLower() != "bell" && selectedNote.noteClass.type.ToLower() != "hold")
+        {
+            Debug.LogWarning("Selected note is not a bell/hold note!");
+            return;
+        }
+
+        if (float.TryParse(inputed, out float width))
+        {
+            selectedNote.noteClass.width = width;
+            Debug.Log($"Bell note width set to {width}");
+
+            // SaveManager의 notes 리스트에서 해당 노트를 찾아 업데이트
+            NoteClass note = saveManager.notes.Find(n =>
+                n.beat == selectedNote.noteClass.beat &&
+                n.position == selectedNote.noteClass.position &&
+                n.type == selectedNote.noteClass.type);
+            if (note != null)
+            {
+                note.width = width;
+            }
+
+            // 시각적 너비 업데이트 (RectTransform의 width 조절)
+            UpdateBellNoteVisualWidth(selectedNote, width);
+        }
+        else
+        {
+            Debug.LogWarning($"Invalid width value: {inputed}");
+        }
+    }
+
+    // Bell 노트의 시각적 너비 업데이트
+    private void UpdateBellNoteVisualWidth(LevelEditerNoteManager note, float width)
+    {
+        RectTransform rectTransform = note.GetComponent<RectTransform>();
+        if (rectTransform != null)
+        {
+            // 기본 width = 95, width 속성에 비례하여 조절
+            // width = 1.0이면 95, width = 2.0이면 190
+            float baseWidth = 95f;
+            float newWidth = baseWidth * width;
+
+            rectTransform.sizeDelta = new Vector2(newWidth, rectTransform.sizeDelta.y);
+            Debug.Log($"Bell note visual width updated: width = {newWidth}");
+        }
+    }
+
+    // Bell 노트 position 설정 (float, 1~4 범위)
+    public void SetBellNotePosition(string inputed)
+    {
+        if (selectedNote == null)
+        {
+            Debug.LogWarning("No note selected!");
+            return;
+        }
+
+        if (selectedNote.noteClass.type.ToLower() != "bell" && selectedNote.noteClass.type.ToLower() != "hold")
+        {
+            Debug.LogWarning("Selected note is not a bell/hold note!");
+            return;
+        }
+
+        if (float.TryParse(inputed, out float position))
+        {
+            if (position >= 1f && position <= 4f)
+            {
+                selectedNote.noteClass.position = position;
+                Debug.Log($"Bell note position set to {position}");
+
+                // SaveManager의 notes 리스트에서 해당 노트를 찾아 업데이트
+                NoteClass note = saveManager.notes.Find(n =>
+                    n.beat == selectedNote.noteClass.beat &&
+                    n.position == selectedNote.noteClass.position &&
+                    n.type == selectedNote.noteClass.type);
+                if (note != null)
+                {
+                    note.position = position;
+                }
+
+                // 노트의 X 위치도 업데이트
+                UpdateNoteVisualPosition(selectedNote);
+            }
+            else
+            {
+                Debug.LogWarning($"Position must be between 1 and 4! Got: {position}");
+            }
+        }
+        else
+        {
+            Debug.LogWarning($"Invalid position value: {inputed}");
+        }
+    }
+
+    // 노트의 시각적 위치 업데이트
+    private void UpdateNoteVisualPosition(LevelEditerNoteManager note)
+    {
+        if (note.noteClass.type.ToLower() == "bell" || note.noteClass.type.ToLower() == "hold")
+        {
+            // Bell 노트의 경우 position이 float이므로 연속적인 위치 계산
+            // position 1 = -158f, position 4 = 158f
+            // 선형 보간: positionX = -158 + (position - 1) * (316 / 3)
+            float positionX = -158f + (note.noteClass.position - 1f) * (316f / 3f);
+            note.transform.localPosition = new Vector3(positionX, note.transform.localPosition.y, note.transform.localPosition.z);
         }
     }
 }

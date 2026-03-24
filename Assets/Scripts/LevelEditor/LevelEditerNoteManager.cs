@@ -27,4 +27,13 @@ public class LevelEditerNoteManager : MonoBehaviour
     {
         isInputed = false;
     }
+
+    // 노트 클릭 시 선택
+    private void OnMouseDown()
+    {
+        if (levelEditer != null)
+        {
+            levelEditer.SelectNote(this);
+        }
+    }
 }
