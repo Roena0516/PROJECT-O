@@ -68,7 +68,7 @@ public class MusicPlayer : MonoBehaviour
 
     void OnPlayDetected()
     {
-        // Play°¡ ½ÇÇàµÇ¾úÀ» ¶§ µ¿ÀÛ
+        // Playï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Ç¾ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 
         int timeLinePosition = 0;
         if (!gameManager.isTest)
