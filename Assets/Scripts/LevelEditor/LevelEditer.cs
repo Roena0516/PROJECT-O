@@ -23,9 +23,14 @@ public class LevelEditer : MonoBehaviour
 
     public SaveManager saveManager;
 
-    public GameObject normalPrefab;
-    public GameObject bellPrefab;
-    public GameObject longPrefab;
+    [SerializeField] private GameObject normalPrefab;
+    [SerializeField] private GameObject bellPrefab;
+    [SerializeField] private GameObject longPrefab;
+    [SerializeField] private GameObject rBellPrefab;
+    [SerializeField] private GameObject avoidPrefab;
+    [SerializeField] private GameObject leftArrowPrefab;
+    [SerializeField] private GameObject rightArrowPrefab;
+
 
     public GameObject notesFolder;
     public GameObject gridFolder;
@@ -258,6 +263,10 @@ public class LevelEditer : MonoBehaviour
             "Normal" => normalPrefab,
             "Bell" => bellPrefab,
             "Long" => longPrefab,
+            "RBell" => rBellPrefab,
+            "Avoid" => avoidPrefab,
+            "LeftArrow" => leftArrowPrefab,
+            "RightArrow" => rightArrowPrefab,
             _ => null
         };
 
@@ -275,8 +284,8 @@ public class LevelEditer : MonoBehaviour
             UpdateLongNoteVisualLength(levelEditerNoteManager, 4f);
         }
 
-        // Bell 노트는 width를 1.0으로 초기화
-        if (noteType.ToLower() == "bell")
+        // Bell, RBell, Arrow 노트는 width를 1.0으로 초기화
+        if (noteType.ToLower() == "bell" || noteType.ToLower() == "rbell" || noteType.ToLower() == "leftarrow" || noteType.ToLower() == "rightarrow")
         {
             levelEditerNoteManager.noteClass.width = 1f;
         }
@@ -665,6 +674,10 @@ public class LevelEditer : MonoBehaviour
                 "hold" => bellPrefab,
                 "bell" => bellPrefab,
                 "long" => longPrefab,
+                "rBell" => rBellPrefab,
+                "avoid" => avoidPrefab,
+                "leftArrow" => leftArrowPrefab,
+                "rightArrow" => rightArrowPrefab,
                 _ => null
             };
 
@@ -932,9 +945,9 @@ public class LevelEditer : MonoBehaviour
             return;
         }
 
-        if (selectedNote.noteClass.type.ToLower() != "bell" && selectedNote.noteClass.type.ToLower() != "hold")
+        if (selectedNote.noteClass.type.ToLower() != "bell" && selectedNote.noteClass.type.ToLower() != "hold" && selectedNote.noteClass.type.ToLower() != "rbell" && selectedNote.noteClass.type.ToLower() != "leftarrow" && selectedNote.noteClass.type.ToLower() != "rightarrow")
         {
-            Debug.LogWarning("Selected note is not a bell/hold note!");
+            Debug.LogWarning("Selected note is not a bell/hold/RBell/Arrow note!");
             return;
         }
 
@@ -987,9 +1000,9 @@ public class LevelEditer : MonoBehaviour
             return;
         }
 
-        if (selectedNote.noteClass.type.ToLower() != "bell" && selectedNote.noteClass.type.ToLower() != "hold")
+        if (selectedNote.noteClass.type.ToLower() != "bell" && selectedNote.noteClass.type.ToLower() != "hold" && selectedNote.noteClass.type.ToLower() != "rbell" && selectedNote.noteClass.type.ToLower() != "leftarrow" && selectedNote.noteClass.type.ToLower() != "rightarrow")
         {
-            Debug.LogWarning("Selected note is not a bell/hold note!");
+            Debug.LogWarning("Selected note is not a bell/hold/RBell/Arrow note!");
             return;
         }
 
@@ -1027,11 +1040,12 @@ public class LevelEditer : MonoBehaviour
     // 노트의 시각적 위치 업데이트
     private void UpdateNoteVisualPosition(LevelEditerNoteManager note)
     {
-        if (note.noteClass.type.ToLower() == "bell" || note.noteClass.type.ToLower() == "hold")
+        if (note.noteClass.type.ToLower() == "bell" || note.noteClass.type.ToLower() == "hold" || note.noteClass.type.ToLower() == "rbell" || note.noteClass.type.ToLower() == "leftarrow" || note.noteClass.type.ToLower() == "rightarrow")
         {
             // Bell 노트의 경우 position이 float이므로 연속적인 위치 계산
             // position 1 = -158f, position 4 = 158f
             // 선형 보간: positionX = -158 + (position - 1) * (316 / 3)
+
             float positionX = -158f + (note.noteClass.position - 1f) * (316f / 3f);
             note.transform.localPosition = new Vector3(positionX, note.transform.localPosition.y, note.transform.localPosition.z);
         }

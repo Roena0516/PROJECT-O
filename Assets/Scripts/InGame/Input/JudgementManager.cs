@@ -256,33 +256,39 @@ public class JudgementManager : MonoBehaviour
 
     public void PerformAction(NoteClass note, string judgement, double currentTimeMs)
     {
-        Debug.Log($"{judgement}: {note.ms}, input: {currentTimeMs} type: {note.type}");
         note.isInputed = true;
         Destroy(note.noteObject);
 
-        if (!noteTypeRate.ContainsKey(note.type))
+        string normalizedType = note.type;
+
+        if (note.type == "rbell" || note.type == "avoid" || note.type == "leftarrow" || note.type == "rightarrow")
         {
-            Debug.LogError($"Unknown note type: '{note.type}' (length: {note.type.Length})");
+            normalizedType = "hold"; // Bell, RBell, Avoid, Arrow 노트는 hold로 간주
+        }
+
+        if (!noteTypeRate.ContainsKey(normalizedType))
+        {
+            Debug.LogError($"Unknown note type: '{normalizedType}' (length: {normalizedType.Length})");
             return;
         }
 
-        Debug.Log(noteTypeRate[note.type]);
+        Debug.Log($"{judgement}: {note.ms}, input: {currentTimeMs}, type: {normalizedType}, rate: {noteTypeRate[normalizedType]}");
 
         if (judgement == "Great")
         {
-            ChangeRate(noteTypeRate[note.type], 0.25f);
+            ChangeRate(noteTypeRate[normalizedType], 0.25f);
         }
         if (judgement == "Good")
         {
-            ChangeRate(noteTypeRate[note.type], 0.5f);
+            ChangeRate(noteTypeRate[normalizedType], 0.5f);
         }
         if (judgement == "Bad")
         {
-            ChangeRate(noteTypeRate[note.type], 1f);
+            ChangeRate(noteTypeRate[normalizedType], 1f);
         }
         if (judgement == "Miss")
         {
-            ChangeRate(noteTypeRate[note.type], 1f);
+            ChangeRate(noteTypeRate[normalizedType], 1f);
         }
         double Ms = note.ms - currentTimeMs;
         judgeCount[judgement]++;

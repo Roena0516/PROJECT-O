@@ -45,9 +45,9 @@ public class Note : MonoBehaviour
 
         speed = noteGenerator.speed;
         dropStartTime = (ms - noteGenerator.fallTime) / 1000f;
-        YPosition = noteClass.type == "hold" ? 2f : 0.001f;
+        YPosition = noteClass.type == "hold" || noteClass.type == "rbell" || noteClass.type == "leftarrow" || noteClass.type == "rightarrow" || noteClass.type == "avoid" ? 2f : 0.001f;
 
-        if (noteClass.type == "hold")
+        if (noteClass.type == "hold" || noteClass.type == "rbell" || noteClass.type == "leftarrow" || noteClass.type == "rightarrow")
         {
             gameObject.transform.localScale = new Vector3(7f * noteClass.width, 1f, 1f);
         }
@@ -138,6 +138,12 @@ public class Note : MonoBehaviour
 
         if (!noteClass.isInputed && (line.currentTime * 1000f) - ms >= 200f)
         {
+            if (noteClass.type == "rbell" || noteClass.type == "avoid")
+            {
+                judgement.PerformAction(noteClass, "PerfectP", ms);
+                isSet = false;
+                return;
+            }
             judgement.PerformAction(noteClass, "Miss", ms);
             judgement.ClearCombo();
             isSet = false;
@@ -152,6 +158,14 @@ public class Note : MonoBehaviour
             {
                 line.judgementManager.PerformAction(noteClass, "PerfectP", noteClass.ms);
                 line.judgementManager.AddCombo(1);
+            }
+        }
+        else if ((noteClass.type == "rbell" || noteClass.type == "avoid") && (noteClass.ms - (line.currentTime * 1000f) <= 0 && noteClass.ms - (line.currentTime * 1000f) >= -160))
+        {
+            if (Math.Abs(judgement.tsumabuki.transform.position.x - gameObject.transform.position.x) <= 3.5f + (1.75f * noteClass.width) + 2.25f)
+            {
+                line.judgementManager.PerformAction(noteClass, "Miss", ms);
+                line.judgementManager.ClearCombo();
             }
         }
     }

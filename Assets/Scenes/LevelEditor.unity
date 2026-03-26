@@ -17276,6 +17276,10 @@ MonoBehaviour:
   normalPrefab: {fileID: 3833513963185199395, guid: b4b6c0e370ece4836a5e738fc6c71d5d, type: 3}
   bellPrefab: {fileID: 1126479216665261760, guid: 6b267d24f499544d39fa02933109b05d, type: 3}
   longPrefab: {fileID: 3906634997580113130, guid: fb13007c7c5c345eda0e8078075a8300, type: 3}
+  rBellPrefab: {fileID: 1126479216665261760, guid: 06e2a9cc210fe4bd4b792751d418e7b2, type: 3}
+  avoidPrefab: {fileID: 1126479216665261760, guid: 500a795c06fba47c096c117f20abd971, type: 3}
+  leftArrowPrefab: {fileID: 1126479216665261760, guid: b5e202caea343455fadfaa523b866259, type: 3}
+  rightArrowPrefab: {fileID: 1126479216665261760, guid: 0382ff31e2f5540fdb830d9cd891b890, type: 3}
   notesFolder: {fileID: 441247592}
   gridFolder: {fileID: 1808936505}
   buttonsFolder: {fileID: 851351653}

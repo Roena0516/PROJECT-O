@@ -3,12 +3,18 @@ using System.Collections.Generic;
 using UnityEngine.UI;
 using UnityEngine;
 using System.IO;
+using System.Linq;
 
 public class NoteGenerator : MonoBehaviour
 {
-    public GameObject notePrefab;
-    public GameObject bellPrefab;
-    public GameObject longPrefab;
+    [SerializeField] private GameObject notePrefab;
+    [SerializeField] private GameObject bellPrefab;
+    [SerializeField] private GameObject longPrefab;
+    [SerializeField] private GameObject rBellPrefab;
+    [SerializeField] private GameObject avoidPrefab;
+    [SerializeField] private GameObject leftArrowPrefab;
+    [SerializeField] private GameObject rightArrowPrefab;
+
     public float BPM;
 
     public float distance;
@@ -87,6 +93,11 @@ public class NoteGenerator : MonoBehaviour
         noteTypeCounts["normal"] = 0;
         noteTypeCounts["hold"] = 0;
         noteTypeCounts["long"] = 0;
+        noteTypeCounts["bell"] = 0;
+        noteTypeCounts["rbell"] = 0;
+        noteTypeCounts["avoid"] = 0;
+        noteTypeCounts["leftarrow"] = 0;
+        noteTypeCounts["rightarrow"] = 0;
 
         if (settings.settings.effectOption == "Random")
         {
@@ -247,6 +258,43 @@ public class NoteGenerator : MonoBehaviour
             ranePosition = new Vector3(zer0Point + gap * (position - 1), spawnPosition1.y, 0);
 
             note = Instantiate(bellPrefab, ranePosition, R, bellsFolder.transform);
+        }
+        else if (type == "rbell")
+        {
+            float zer0Point = -10.5f;
+            float gap = 7f;
+            ranePosition = new Vector3(zer0Point + gap * (position - 1), spawnPosition1.y, 0);
+
+            note = Instantiate(rBellPrefab, ranePosition, R, bellsFolder.transform);
+        }
+        else if (type == "avoid")
+        {
+            float zer0Point = -10.5f;
+            float gap = 7f;
+            ranePosition = new Vector3(zer0Point + gap * (position - 1), spawnPosition1.y, 0);
+
+            note = Instantiate(avoidPrefab, ranePosition, R, bellsFolder.transform);
+        }
+        else if (type == "leftarrow")
+        {
+            float zer0Point = -10.5f;
+            float gap = 7f;
+            ranePosition = new Vector3(zer0Point + gap * (position - 1), spawnPosition1.y, 0);
+
+            note = Instantiate(leftArrowPrefab, ranePosition, R, bellsFolder.transform);
+        }
+        else if (type == "rightarrow")
+        {
+            float zer0Point = -10.5f;
+            float gap = 7f;
+            ranePosition = new Vector3(zer0Point + gap * (position - 1), spawnPosition1.y, 0);
+
+            note = Instantiate(rightArrowPrefab, ranePosition, R, bellsFolder.transform);
+        }
+        else
+        {
+            Debug.LogWarning($"Unknown note type: {type}");
+            return;
         }
 
         if (noteClass.isEndNote == true)
