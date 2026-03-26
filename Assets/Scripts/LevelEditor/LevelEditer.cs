@@ -165,6 +165,7 @@ public class LevelEditer : MonoBehaviour
         dropdown.onValueChanged.AddListener(OnDropdownValueChanged);
 
         SetNoteType("Normal");
+        DeselectNote();
 
         isRemoving = false;
         isMusicPlaying = false;
@@ -194,6 +195,8 @@ public class LevelEditer : MonoBehaviour
         }
 
         Debug.Log($"Position : {position}, Beat : {realBeat} 1/{beat}, Type : {noteType}");
+
+        DeselectNote();
 
         if (isRemoving)
         {
@@ -574,6 +577,7 @@ public class LevelEditer : MonoBehaviour
 
     public void LoadLevel()
     {
+        fileLoadFolder.SetActive(false);
         LoadFromJson(Path.Combine(Application.streamingAssetsPath, $"{fileName}.json"));
     }
 
@@ -820,7 +824,20 @@ public class LevelEditer : MonoBehaviour
     public void SelectNote(LevelEditerNoteManager note)
     {
         selectedNote = note;
+        inputsFolder.SetActive(true);
+        Transform inputsTransform = inputsFolder.transform;
+        inputsTransform.Find("LengthInput").GetComponent<TMP_InputField>().text = $"{note.noteClass.length}";
+        inputsTransform.Find("TickInput").GetComponent<TMP_InputField>().text = $"{note.noteClass.tick}";
+        inputsTransform.Find("WidthInput").GetComponent<TMP_InputField>().text = $"{note.noteClass.width}";
+        inputsTransform.Find("PositionInput").GetComponent<TMP_InputField>().text = $"{note.noteClass.position}";
         Debug.Log($"Note selected: Type={note.noteClass.type}, Beat={note.noteClass.beat}, Position={note.noteClass.position}");
+    }
+
+    public void DeselectNote()
+    {
+        selectedNote = null;
+        inputsFolder.SetActive(false);
+        Debug.Log("Note deselected");
     }
 
     // 롱노트 length 설정
