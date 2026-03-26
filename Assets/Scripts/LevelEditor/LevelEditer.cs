@@ -30,6 +30,10 @@ public class LevelEditer : MonoBehaviour
     public GameObject notesFolder;
     public GameObject gridFolder;
 
+    [SerializeField] private GameObject buttonsFolder;
+    [SerializeField] private GameObject inputsFolder;
+    [SerializeField] private GameObject fileLoadFolder;
+
     public GameObject addIndicator;
     public GameObject removeIndicator;
 
@@ -160,7 +164,7 @@ public class LevelEditer : MonoBehaviour
 
         dropdown.onValueChanged.AddListener(OnDropdownValueChanged);
 
-        noteType = "Normal";
+        SetNoteType("Normal");
 
         isRemoving = false;
         isMusicPlaying = false;
@@ -718,7 +722,17 @@ public class LevelEditer : MonoBehaviour
 
     public void SetNoteType(string type)
     {
+        Debug.Log($"Note type changed from: {noteType} to: {type}");
+        if (!string.IsNullOrEmpty(noteType))
+        {
+            Transform previousButton = buttonsFolder.transform.Find(noteType);
+            if (previousButton != null)
+            {
+                previousButton.GetComponent<Image>().color = Color.white;
+            }
+        }
         noteType = type;
+        buttonsFolder.transform.Find(type).GetComponent<Image>().color = Color.yellow;
     }
 
     public void SetArtist(string inputed)
