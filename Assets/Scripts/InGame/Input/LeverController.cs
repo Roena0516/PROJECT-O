@@ -10,11 +10,21 @@ public class LeverController : MonoBehaviour
 
     private float currentX = 0f;    // 누적된 레버 위치
 
+    public string leverDirection; // "Left" || "Right"
+
     void Update()
     {
         // 1. 마우스의 좌우 움직임량(Delta X)을 읽어옵니다.
         // 나중에 하드웨어가 오면 이 부분만 하드웨어 입력값으로 바꾸면 됩니다!
         float deltaX = Mouse.current.delta.x.ReadValue();
+
+        // 레버가 움직이는 방향을 감지합니다.
+        if (deltaX < 0)
+            leverDirection = "Left";
+        else if (deltaX > 0)
+            leverDirection = "Right";
+        else
+            leverDirection = "Stop";
 
         // 2. 현재 위치에 변화량을 더합니다.
         currentX += deltaX * sensitivity * Time.deltaTime;

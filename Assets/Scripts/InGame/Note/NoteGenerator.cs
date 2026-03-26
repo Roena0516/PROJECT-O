@@ -161,6 +161,11 @@ public class NoteGenerator : MonoBehaviour
             if (note.type != "null" && note.type != "")
             {
                 noteTypeCounts[note.type]++;
+
+                if (note.type == "bell" || note.type == "rbell" || note.type == "leftarrow" || note.type == "rightarrow" || note.type == "avoid")
+                {
+                    noteTypeCounts["hold"]++;
+                }
             }
             note.isEndNote = false;
         }

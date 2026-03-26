@@ -138,12 +138,6 @@ public class Note : MonoBehaviour
 
         if (!noteClass.isInputed && (line.currentTime * 1000f) - ms >= 200f)
         {
-            if (noteClass.type == "rbell" || noteClass.type == "avoid")
-            {
-                judgement.PerformAction(noteClass, "PerfectP", ms);
-                isSet = false;
-                return;
-            }
             judgement.PerformAction(noteClass, "Miss", ms);
             judgement.ClearCombo();
             isSet = false;
@@ -160,12 +154,37 @@ public class Note : MonoBehaviour
                 line.judgementManager.AddCombo(1);
             }
         }
-        else if ((noteClass.type == "rbell" || noteClass.type == "avoid") && (noteClass.ms - (line.currentTime * 1000f) <= 0 && noteClass.ms - (line.currentTime * 1000f) >= -160))
+        if ((noteClass.type == "rbell" || noteClass.type == "avoid") && (noteClass.ms - (line.currentTime * 1000f) <= 0 && noteClass.ms - (line.currentTime * 1000f) >= -160))
         {
             if (Math.Abs(judgement.tsumabuki.transform.position.x - gameObject.transform.position.x) <= 3.5f + (1.75f * noteClass.width) + 2.25f)
             {
                 line.judgementManager.PerformAction(noteClass, "Miss", ms);
                 line.judgementManager.ClearCombo();
+            }
+        }
+        if (noteClass.type == "leftarrow" && (noteClass.ms - (line.currentTime * 1000f) <= 0 && noteClass.ms - (line.currentTime * 1000f) >= -160))
+        {
+            if (judgement.tsumabuki.GetComponent<LeverController>().leverDirection == "Left" && Math.Abs(judgement.tsumabuki.transform.position.x - gameObject.transform.position.x) <= 3.5f + (1.75f * noteClass.width) + 2.25f)
+            {
+                line.judgementManager.PerformAction(noteClass, "PerfectP", noteClass.ms);
+                line.judgementManager.AddCombo(1);
+            }
+        }
+        if (noteClass.type == "rightarrow" && (noteClass.ms - (line.currentTime * 1000f) <= 0 && noteClass.ms - (line.currentTime * 1000f) >= -160))
+        {
+            if (judgement.tsumabuki.GetComponent<LeverController>().leverDirection == "Right" && Math.Abs(judgement.tsumabuki.transform.position.x - gameObject.transform.position.x) <= 3.5f + (1.75f * noteClass.width) + 2.25f)
+            {
+                line.judgementManager.PerformAction(noteClass, "PerfectP", noteClass.ms);
+                line.judgementManager.AddCombo(1);
+            }
+        }
+
+        if (!noteClass.isInputed && (line.currentTime * 1000f) - ms >= 0f)
+        {
+            if (noteClass.type == "rbell" || noteClass.type == "avoid")
+            {
+                judgement.PerformAction(noteClass, "PerfectP", ms);
+                isSet = false;
             }
         }
     }
